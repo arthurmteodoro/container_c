@@ -3,6 +3,7 @@
 //
 
 #include <stdlib.h>
+#include "./include/utils.h"
 #include "./include/slist.h"
 
 struct node
@@ -124,6 +125,42 @@ int prepend_slist(SList sList, void* value)
     return 1;
 }
 
+// TODO: note que a copia vai ser rasa
+int extend_slist(SList sList_dest, SList sList_source)
+{
+    if(sList_dest == NULL || sList_source == NULL)
+        return 0;
+
+    if(sList_source->size == 0)
+        return 1;
+
+    int amount_of_values_entered = 0;
+    SList_Iterator iterator = create_slist_iterator(sList_source);
+    while(slist_iterator_has_next(iterator))
+    {
+        void* value_to_insert = slist_iterator_next(iterator);
+        if(append_slist(sList_dest, value_to_insert))
+            amount_of_values_entered++;
+        else
+            break;
+    }
+    destroy_slist_iterator(iterator);
+
+    // if any error occurred, the values already entered will be removed
+    if(amount_of_values_entered != sList_source->size)
+    {
+        while(amount_of_values_entered != 0)
+        {
+            remove_index_slist(sList_dest, size_slist(sList_dest)-1);
+            amount_of_values_entered--;
+        }
+        return 0;
+    }
+
+    sList_dest->size += sList_dest->size;
+    return 1;
+}
+
 int insert_slist(SList sList, int index, void* value)
 {
     if(sList == NULL)
@@ -165,6 +202,17 @@ int size_slist(SList sList)
         return -1;
 
     return (int) sList->size;
+}
+
+int is_empty_slist(SList sList)
+{
+    if(sList == NULL)
+        return -1;
+
+    if(sList->size == 0)
+        return 1;
+    else
+        return 0;
 }
 
 void* get_slist(SList sList, int index)
@@ -271,6 +319,153 @@ int remove_index_slist(SList sList, int index)
     return 1;
 }
 
+/*int remove_value_slist(SList sList, void* value, void (*cmp)(void*, void*))
+{
+    if(sList == NULL)
+        return 0;
+
+    if(value == NULL)
+        return 0;
+
+    if(cmp == NULL)
+        return 0;
+
+}*/
+
+int clear_slist(SList sList)
+{
+    if(sList == NULL)
+        return 0;
+
+    while(!is_empty_slist(sList))
+    {
+        remove_index_slist(sList, 0);
+    }
+    return 1;
+}
+
+int index_of_slist(SList sList, void* value, int (*cmp)(const void*, const void*))
+{
+    if(sList == NULL)
+        return -1;
+
+    if(value == NULL)
+        return -1;
+
+    if(cmp == NULL)
+        return -1;
+
+    int index = 0;
+    Node aux = sList->first;
+
+    while(aux != NULL && (*cmp)(aux->value, value))
+    {
+        index++;
+        aux = aux->next;
+    }
+
+    if(index == sList->size)
+        return -1;
+    return index;
+}
+
+int contains_slist(SList sList, void* value, int (*cmp)(const void*, const void*))
+{
+    if(sList == NULL)
+        return 0;
+
+    if(value == NULL)
+        return 0;
+
+    if(cmp == NULL)
+        return 0;
+
+    int index = index_of_slist(sList, value, cmp);
+    if(index == -1)
+        return 0;
+    return 1;
+}
+
+void** to_array_slist(SList sList)
+{
+    if(sList == NULL)
+        return NULL;
+
+    if(sList->size == 0)
+        return NULL;
+
+    void** array = (void**) malloc(sList->size*sizeof(void*));
+    if(array == NULL)
+        return NULL;
+
+    int i;
+    Node aux = sList->first;
+    for(i = 0; i < size_slist(sList); i++)
+    {
+        array[i] = aux->value;
+        aux = aux->next;
+    }
+    return array;
+}
+
+int reverse_slist(SList sList)
+{
+    if(sList == NULL)
+        return 0;
+
+    if(sList->size == 0 || sList->size == 1)
+        return 0;
+
+    Node prev = NULL;
+    Node next = NULL;
+    Node swap = sList->first;
+
+    while(swap != NULL)
+    {
+        next = swap->next;
+        swap->next = prev;
+        prev = swap;
+        swap = next;
+    }
+
+    sList->first = prev;
+    return 1;
+}
+
+int sort_slist(SList sList, int (*cmp)(const void*, const void*))
+{
+    if(sList == NULL)
+        return 0;
+
+    if(cmp == NULL)
+        return 0;
+
+    if(sList->size == 0 || sList->size == 1)
+        return 0;
+
+    void** arr = to_array_slist(sList);
+    if(arr == NULL)
+        return 0;
+
+    quicksort(arr, 0, (int)sList->size-1, cmp);
+    free(arr);
+
+    return 1;
+}
+
+SList copy_shallow_slist(SList sList)
+{
+    SList new_list = create_slist();
+
+    SList_Iterator iterator = create_slist_iterator(sList);
+    while(slist_iterator_has_next(iterator))
+    {
+        void* value = slist_iterator_next(iterator);
+        append_slist(new_list, value);
+    }
+
+    return new_list;
+}
 
 
 /*
@@ -288,10 +483,21 @@ SList_Iterator create_slist_iterator(SList sList)
     iterator->list = sList;
     iterator->head = sList->first;
     iterator->next = sList->first->next;
+
+    return iterator;
+}
+
+SList_Iterator destroy_slist_iterator(SList_Iterator sList_iterador)
+{
+    free(sList_iterador);
+    return NULL;
 }
 
 int slist_iterator_has_next(SList_Iterator sList_iterator)
 {
+    if(sList_iterator == NULL)
+        return 0;
+
     if(sList_iterator->head == NULL)
         return 0;
 
@@ -300,6 +506,9 @@ int slist_iterator_has_next(SList_Iterator sList_iterator)
 
 void* slist_iterator_next(SList_Iterator sList_iterator)
 {
+    if(sList_iterator == NULL)
+        return NULL;
+
     void* value = sList_iterator->head->value;
     sList_iterator->index++;
     sList_iterator->head = sList_iterator->next;

@@ -21,6 +21,26 @@ void print_list_using_for(SList sList)
     }
 }
 
+void print_array(void** arr, int n)
+{
+    int i;
+    printf("[");
+    for(i = 0; i < n; i++)
+    {
+        int* value_read = (int*) arr[i];
+        if (i == n-1)
+            printf("%d]\n", *value_read);
+        else
+            printf("%d, ", *value_read);
+    }
+}
+
+int cmpfunc (const void* a, const void* b) {
+    int* x = (int*) a;
+    int* y = (int*) b;
+    return *x - *y;
+}
+
 int main() {
     int i;
     SList list = create_slist();
@@ -78,5 +98,57 @@ int main() {
     printf("List after removing last position: ");
     print_list_using_for(list);
 
+    printf("\nExtending list\n");
+    SList list2 = create_slist();
+    for(i = 1; i < 11; i++)
+    {
+        value = (int*) malloc(sizeof(int));
+        *value = i*10;
+        append_slist(list, value);
+    }
+    extend_slist(list, list2);
+    printf("List after extend: ");
+    print_list_using_for(list);
+
+    printf("\nSearching index of 60 in list\n");
+    value = (int*) malloc(sizeof(int));
+    *value = 60;
+    int index = index_of_slist(list, value, cmpfunc);
+    printf("Index of 60 in list: %d\n", index);
+
+    printf("\nSearching index of 1000 (dont exists) in list\n");
+    value = (int*) malloc(sizeof(int));
+    *value = 1000;
+    index = index_of_slist(list, value, cmpfunc);
+    printf("Index of 1000 in list: %d\n", index);
+
+    printf("\nContains value 60 in list\n");
+    value = (int*) malloc(sizeof(int));
+    *value = 60;
+    int exists = contains_slist(list, value, cmpfunc);
+    printf("Exists value 60 in list: %d\n", exists);
+
+    printf("\nContains value 1000 (dont exists) in list\n");
+    value = (int*) malloc(sizeof(int));
+    *value = 1000;
+    exists = contains_slist(list, value, cmpfunc);
+    printf("Exists value 1000 in list: %d\n", exists);
+
+    printf("\nList to array\n");
+    void** array = to_array_slist(list);
+    printf("Array: ");
+    print_array(array, size_slist(list));
+
+    printf("\nReversing list\n");
+    reverse_slist(list);
+    printf("List after reverse: ");
+    print_list_using_for(list);
+
+    printf("\nSorting list\n");
+    sort_slist(list, cmpfunc);
+    printf("List after sort: ");
+    print_list_using_for(list);
+
+    list2 = destroy_slist(list2);
     list = destroy_slist(list);
 }
