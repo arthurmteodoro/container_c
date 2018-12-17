@@ -162,6 +162,85 @@ int main() {
     printf("List after sort: ");
     print_list_using_for(list);
 
+    printf("\nPrint using iterator\n");
+    SList_Iterator iterator = create_slist_iterator(list);
+    while(slist_iterator_has_next(iterator))
+    {
+        value = (int*) slist_iterator_next(iterator);
+        printf("%d ", *value);
+    }
+    destroy_slist_iterator(iterator);
+    printf("\n");
+
+    printf("\nRemoving first element using iterator\n");
+    iterator = create_slist_iterator(list);
+    index = 0;
+    while(slist_iterator_has_next(iterator))
+    {
+        value = (int*) slist_iterator_next(iterator);
+        printf("%d ", *value);
+        if(index == 0)
+            slist_iterator_remove(iterator, NULL);
+        index++;
+    }
+    destroy_slist_iterator(iterator);
+    printf("\n");
+    printf("List after remove: ");
+    print_list_using_for(list);
+
+    printf("\nRemoving first element using iterator as list only one element\n");
+    SList list3 = create_slist();
+    value = malloc(sizeof(int));
+    *value = 400;
+    append_slist(list3, value);
+
+    iterator = create_slist_iterator(list3);
+    index = 0;
+    while(slist_iterator_has_next(iterator))
+    {
+        value = (int*) slist_iterator_next(iterator);
+        printf("%d ", *value);
+        if(index == 0)
+            slist_iterator_remove(iterator, NULL);
+        index++;
+    }
+    destroy_slist_iterator(iterator);
+    printf("\n");
+    printf("List after remove: ");
+    print_list_using_for(list3);
+    printf("\nSize of list3: %d", size_slist(list3));
+
+    printf("\n\nRemoving last element using iterator\n");
+    iterator = create_slist_iterator(list);
+    index = 0;
+    while(slist_iterator_has_next(iterator))
+    {
+        value = (int*) slist_iterator_next(iterator);
+        printf("%d ", *value);
+        if(index == size_slist(list)-1)
+            slist_iterator_remove(iterator, NULL);
+        index++;
+    }
+    destroy_slist_iterator(iterator);
+    printf("\n");
+    printf("List after remove: ");
+    print_list_using_for(list);
+
+    printf("\nRemoving even numbers using iterator\n");
+    iterator = create_slist_iterator(list);
+    while(slist_iterator_has_next(iterator))
+    {
+        value = (int*) slist_iterator_next(iterator);
+        printf("%d ", *value);
+        if(*value % 2 == 0)
+            slist_iterator_remove(iterator, NULL);
+    }
+    destroy_slist_iterator(iterator);
+    printf("\n");
+    printf("List after remove: ");
+    print_list_using_for(list);
+
+    list3 = destroy_slist(list3);
     list2 = destroy_slist(list2);
     list = destroy_slist(list);
 }

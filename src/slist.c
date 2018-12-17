@@ -35,6 +35,7 @@ struct slist_iterator
     SList list;
     Node head;
     Node next;
+    Node prev;
 };
 
 SList create_slist()
@@ -549,11 +550,12 @@ SList_Iterator create_slist_iterator(SList sList)
     if(iterator == NULL)
         return NULL;
 
-    iterator->index = 0;
+    iterator->index = -1;
     iterator->size = sList->size;
     iterator->list = sList;
-    iterator->head = sList->first;
-    iterator->next = sList->first->next;
+    iterator->head = NULL;
+    iterator->next = sList->first;
+    iterator->prev = NULL;
 
     return iterator;
 }
@@ -569,7 +571,7 @@ int slist_iterator_has_next(SList_Iterator sList_iterator)
     if(sList_iterator == NULL)
         return 0;
 
-    if(sList_iterator->head == NULL)
+    if(sList_iterator->next == NULL)
         return 0;
 
     return 1;
@@ -580,13 +582,83 @@ void* slist_iterator_next(SList_Iterator sList_iterator)
     if(sList_iterator == NULL)
         return NULL;
 
-    void* value = sList_iterator->head->value;
-    sList_iterator->index++;
-    sList_iterator->head = sList_iterator->next;
-
-    if(sList_iterator->next != NULL)
+    if(sList_iterator->next)
+    {
+        sList_iterator->prev = sList_iterator->head;
+        sList_iterator->head = sList_iterator->next;
         sList_iterator->next = sList_iterator->next->next;
 
-    return value;
+        void* value = sList_iterator->head->value;
+
+        return value;
+    }
+
+    return NULL;
+}
+
+int slist_iterator_remove(SList_Iterator sList_iterator, void** out)
+{
+    if(sList_iterator == NULL)
+        return 0;
+
+    if(sList_iterator->head == NULL)
+        return 0;
+
+    // if removing the first position
+    if(sList_iterator->head == sList_iterator->list->first)
+    {
+        void* v = sList_iterator->head->value;
+        Node aux = sList_iterator->head;
+
+        sList_iterator->list->first = sList_iterator->next;
+        sList_iterator->list->size--;
+
+        sList_iterator->prev = NULL;
+        sList_iterator->head = NULL;
+
+        if(sList_iterator->list->configs->remove_callback)
+            sList_iterator->list->configs->remove_callback(v);
+        else if(out)
+            *out = v;
+        free(aux);
+
+        return 1;
+    }
+
+    // if removing the last position
+    if(sList_iterator->next == NULL)
+    {
+        void* v = sList_iterator->head->value;
+        Node aux = sList_iterator->head;
+
+        sList_iterator->prev->next = NULL;
+        sList_iterator->head = sList_iterator->prev;
+
+        sList_iterator->list->size--;
+
+        if(sList_iterator->list->configs->remove_callback)
+            sList_iterator->list->configs->remove_callback(v);
+        else if(out)
+            *out = v;
+        free(aux);
+
+        return 1;
+    }
+
+    // is a middle element
+    void* v = sList_iterator->head->value;
+    Node aux = sList_iterator->head;
+
+    sList_iterator->prev->next = sList_iterator->next;
+    sList_iterator->list->size--;
+    sList_iterator->head = sList_iterator->prev;
+
+    if(sList_iterator->list->configs->remove_callback)
+        sList_iterator->list->configs->remove_callback(v);
+    else if(out)
+        *out = v;
+    free(aux);
+
+    return 1;
 }
 

@@ -39,5 +39,6 @@ extern SList_Iterator create_slist_iterator(SList sList);
 extern SList_Iterator destroy_slist_iterator(SList_Iterator sList_iterador);
 extern int slist_iterator_has_next(SList_Iterator sList_iterator);
 extern void* slist_iterator_next(SList_Iterator sList_iterator);
+extern int slist_iterator_remove(SList_Iterator sList_iterator, void** out);
 
 #endif //CONTAINER_C_SLIST_H
