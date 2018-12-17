@@ -41,9 +41,15 @@ int cmpfunc (const void* a, const void* b) {
     return *x - *y;
 }
 
+void destroy_func(void* value)
+{
+    free(value);
+}
+
 int main() {
     int i;
     SList list = create_slist();
+    set_destruction_function_on_remove(list, destroy_func);
 
     printf("Inserting 10 elements in the list using append\n");
     for(i = 0; i < 10; i++)
@@ -79,23 +85,30 @@ int main() {
     printf("\nSetting value 323 in position 6 of the list\n");
     value = (int*) malloc(sizeof(int));
     *value = 323;
-    set_slist(list, 6, value);
+    set_slist(list, 6, value, NULL);
     printf("List after set: ");
     print_list_using_for(list);
 
     printf("\nRemoving position 4 of the list\n");
-    remove_index_slist(list, 4);
+    remove_index_slist(list, 4, NULL);
     printf("List after removing position 4: ");
     print_list_using_for(list);
 
     printf("\nRemoving position 0 of the list\n");
-    remove_index_slist(list, 0);
+    remove_index_slist(list, 0, NULL);
     printf("List after removing position 0: ");
     print_list_using_for(list);
 
     printf("\nRemoving the last element of the list\n");
-    remove_index_slist(list, size_slist(list)-1);
+    remove_index_slist(list, size_slist(list)-1, NULL);
     printf("List after removing last position: ");
+    print_list_using_for(list);
+
+    printf("\nRemoving value 6 of the list\n");
+    value = (int*) malloc(sizeof(int));
+    *value = 6;
+    remove_value_slist(list, value, cmpfunc, NULL);
+    printf("List after removing value 6: ");
     print_list_using_for(list);
 
     printf("\nExtending list\n");

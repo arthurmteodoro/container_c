@@ -14,10 +14,18 @@ struct node
 
 typedef struct node *Node;
 
+struct slist_config
+{
+    void (*remove_callback) (void*);
+};
+typedef struct slist_config* SList_Config;
+
 struct slist
 {
     size_t size;
     Node first;
+
+    SList_Config configs;
 };
 
 struct slist_iterator
@@ -36,9 +44,29 @@ SList create_slist()
     if(sList == NULL)
         return NULL;
 
+    SList_Config config = (SList_Config) malloc(sizeof(struct slist_config));
+
+    if(config == NULL)
+        return NULL;
+
+    config->remove_callback = NULL;
+
     sList->size = 0;
     sList->first = NULL;
+    sList->configs = config;
     return  sList;
+}
+
+int set_destruction_function_on_remove(SList sList, void (*remove_callback) (void*))
+{
+    if(sList == NULL)
+        return 0;
+
+    if(remove_callback == NULL)
+        return 0;
+
+    sList->configs->remove_callback = remove_callback;
+    return 1;
 }
 
 SList destroy_slist(SList sList)
@@ -48,6 +76,7 @@ SList destroy_slist(SList sList)
 
     if(sList->size == 0)
     {
+        free(sList->configs);
         free(sList);
         return NULL;
     }
@@ -56,11 +85,16 @@ SList destroy_slist(SList sList)
     {
         Node remove_node = sList->first;
         sList->first = remove_node->next;
-        free(remove_node->value);
+
+        // if a config callback to remove as config, execute this callback
+        if(sList->configs->remove_callback)
+            sList->configs->remove_callback(remove_node->value);
+
         free(remove_node);
         sList->size--;
     }
 
+    free(sList->configs);
     free(sList);
     return NULL;
 }
@@ -125,7 +159,7 @@ int prepend_slist(SList sList, void* value)
     return 1;
 }
 
-// TODO: note que a copia vai ser rasa
+// note que a copia vai ser rasa
 int extend_slist(SList sList_dest, SList sList_source)
 {
     if(sList_dest == NULL || sList_source == NULL)
@@ -151,7 +185,7 @@ int extend_slist(SList sList_dest, SList sList_source)
     {
         while(amount_of_values_entered != 0)
         {
-            remove_index_slist(sList_dest, size_slist(sList_dest)-1);
+            remove_index_slist(sList_dest, size_slist(sList_dest)-1, NULL);
             amount_of_values_entered--;
         }
         return 0;
@@ -240,7 +274,7 @@ void* get_slist(SList sList, int index)
     return aux->value;
 }
 
-int set_slist(SList sList, int index, void* value)
+int set_slist(SList sList, int index, void* value, void** out)
 {
     if(sList == NULL)
         return 0;
@@ -256,12 +290,18 @@ int set_slist(SList sList, int index, void* value)
         counter++;
     }
 
-    free(aux->value);
+    if(sList->configs->remove_callback)
+    {
+        sList->configs->remove_callback(aux->value);
+    }
+    else
+        if(out)
+            *out = aux->value;
     aux->value = value;
     return 1;
 }
 
-int remove_index_slist(SList sList, int index)
+int remove_index_slist(SList sList, int index, void** out)
 {
     if(sList == NULL)
         return 0;
@@ -272,7 +312,11 @@ int remove_index_slist(SList sList, int index)
     // if the list has only one element
     if(sList->size == 1)
     {
-        free(sList->first->value);
+        if(sList->configs->remove_callback)
+            sList->configs->remove_callback(sList->first->value);
+        else
+            if(out)
+                *out = sList->first->value;
         free(sList->first);
 
         sList->first = NULL;
@@ -285,10 +329,18 @@ int remove_index_slist(SList sList, int index)
     if(index == 0)
     {
         Node new_first = sList->first->next;
-        free(sList->first->value);
+
+        if(sList->configs->remove_callback)
+            sList->configs->remove_callback(sList->first->value);
+        else
+            if(out)
+                *out = sList->first->value;
+
         free(sList->first);
         sList->first = new_first;
         sList->size--;
+
+        return 1;
     }
 
     // if it is an element of the middle of the list you have to search for the previous pointer
@@ -303,7 +355,11 @@ int remove_index_slist(SList sList, int index)
     // if is a last value
     if(index+1 == sList->size)
     {
-        free(aux->next->value);
+        if(sList->configs->remove_callback)
+            sList->configs->remove_callback(aux->next->value);
+        else
+            if(out)
+                *out = aux->next->value;
         free(aux->next);
         aux->next = NULL;
         sList->size--;
@@ -312,14 +368,20 @@ int remove_index_slist(SList sList, int index)
 
     Node remove_node = aux->next;
     aux->next = remove_node->next;
-    free(remove_node->value);
+
+    if(sList->configs->remove_callback)
+        sList->configs->remove_callback(remove_node->value);
+    else
+        if(out)
+            *out = remove_node->value;
+
     free(remove_node);
     sList->size--;
 
     return 1;
 }
 
-/*int remove_value_slist(SList sList, void* value, void (*cmp)(void*, void*))
+int remove_value_slist(SList sList, void* value, int (*cmp)(const void*, const void*), void** out)
 {
     if(sList == NULL)
         return 0;
@@ -330,7 +392,16 @@ int remove_index_slist(SList sList, int index)
     if(cmp == NULL)
         return 0;
 
-}*/
+    if(sList->size == 0)
+        return 0;
+
+    int index = index_of_slist(sList, value, cmp);
+    if(index != -1)
+    {
+        remove_index_slist(sList, index, out);
+    }
+    return 0;
+}
 
 int clear_slist(SList sList)
 {
@@ -339,7 +410,7 @@ int clear_slist(SList sList)
 
     while(!is_empty_slist(sList))
     {
-        remove_index_slist(sList, 0);
+        remove_index_slist(sList, 0, NULL);
     }
     return 1;
 }

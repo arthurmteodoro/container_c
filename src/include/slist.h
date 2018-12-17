@@ -9,6 +9,7 @@ typedef struct slist* SList;
 typedef struct slist_iterator* SList_Iterator;
 
 extern SList create_slist();
+extern int set_destruction_function_on_remove(SList sList, void (*remove_callback) (void*));
 extern SList destroy_slist(SList sList);
 
 extern int append_slist(SList sList, void* value);
@@ -20,10 +21,10 @@ extern int size_slist(SList sList);
 extern int is_empty_slist(SList sList);
 
 extern void* get_slist(SList sList, int index);
-extern int set_slist(SList sList, int index, void* value);
+extern int set_slist(SList sList, int index, void* value, void** out);
 
-extern int remove_index_slist(SList sList, int index);
-extern int remove_value_slist(SList sList, void* value, void (*cmp)(void*, void*));
+extern int remove_index_slist(SList sList, int index, void** out);
+extern int remove_value_slist(SList sList, void* value, int (*cmp)(const void*, const void*), void** out);
 extern int clear_slist(SList sList);
 
 extern int index_of_slist(SList sList, void* value, int (*cmp)(const void*, const void*));
