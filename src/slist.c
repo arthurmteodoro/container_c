@@ -1,18 +1,38 @@
-//
-// Created by arthur on 15/12/18.
-//
+/*
+ * MIT License
+ *
+ * Copyright (c) 2018 Arthur Alexsander Martins Teodoro
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 
 #include <stdlib.h>
 #include "./include/utils.h"
 #include "./include/slist.h"
 
-struct node
+struct slist_node
 {
     void* value;
-    struct node *next;
+    struct slist_node *next;
 };
 
-typedef struct node *Node;
+typedef struct slist_node *SListNode;
 
 struct slist_config
 {
@@ -23,7 +43,7 @@ typedef struct slist_config* SList_Config;
 struct slist
 {
     size_t size;
-    Node first;
+    SListNode first;
 
     SList_Config configs;
 };
@@ -33,9 +53,9 @@ struct slist_iterator
     int index;
     size_t size;
     SList list;
-    Node head;
-    Node next;
-    Node prev;
+    SListNode head;
+    SListNode next;
+    SListNode prev;
 };
 
 SList create_slist()
@@ -58,7 +78,7 @@ SList create_slist()
     return  sList;
 }
 
-int set_destruction_function_on_remove(SList sList, void (*remove_callback) (void*))
+int set_slist_destruction_function_on_remove(SList sList, void (*remove_callback) (void*))
 {
     if(sList == NULL)
         return 0;
@@ -84,7 +104,7 @@ SList destroy_slist(SList sList)
 
     while(sList->size > 0)
     {
-        Node remove_node = sList->first;
+        SListNode remove_node = sList->first;
         sList->first = remove_node->next;
 
         // if a config callback to remove as config, execute this callback
@@ -106,7 +126,7 @@ int append_slist(SList sList, void* value)
     if(sList == NULL)
         return 0;
 
-    Node node = (Node) malloc(sizeof(struct node));
+    SListNode node = (SListNode) malloc(sizeof(struct slist_node));
     if(node == NULL)
         return 0;
 
@@ -121,7 +141,7 @@ int append_slist(SList sList, void* value)
         return 1;
     }
 
-    Node aux = sList->first;
+    SListNode aux = sList->first;
     while(aux->next != NULL)
     {
         aux = aux->next;
@@ -138,7 +158,7 @@ int prepend_slist(SList sList, void* value)
     if(sList == NULL)
         return 0;
 
-    Node node = (Node) malloc(sizeof(struct node));
+    SListNode node = (SListNode) malloc(sizeof(struct slist_node));
     if(node == NULL)
         return 0;
 
@@ -210,14 +230,14 @@ int insert_slist(SList sList, int index, void* value)
     if(index == 0)
         return prepend_slist(sList, value);
 
-    Node node = (Node) malloc(sizeof(struct node));
+    SListNode node = (SListNode) malloc(sizeof(struct slist_node));
     if(node == NULL)
         return 0;
 
     node->value = value;
 
     int counter = 0;
-    Node aux = sList->first;
+    SListNode aux = sList->first;
     while(counter < index-1)
     {
         aux = aux->next;
@@ -264,7 +284,7 @@ void* get_slist(SList sList, int index)
     if(index == 0)
         return sList->first->value;
 
-    Node aux = sList->first;
+    SListNode aux = sList->first;
     int counter = 0;
     while(counter != index)
     {
@@ -284,7 +304,7 @@ int set_slist(SList sList, int index, void* value, void** out)
         return 0;
 
     int counter = 0;
-    Node aux = sList->first;
+    SListNode aux = sList->first;
     while(counter != index)
     {
         aux = aux->next;
@@ -329,7 +349,7 @@ int remove_index_slist(SList sList, int index, void** out)
     // if is a first element
     if(index == 0)
     {
-        Node new_first = sList->first->next;
+        SListNode new_first = sList->first->next;
 
         if(sList->configs->remove_callback)
             sList->configs->remove_callback(sList->first->value);
@@ -346,7 +366,7 @@ int remove_index_slist(SList sList, int index, void** out)
 
     // if it is an element of the middle of the list you have to search for the previous pointer
     int counter = 0;
-    Node aux = sList->first;
+    SListNode aux = sList->first;
     while(counter < index-1)
     {
         aux = aux->next;
@@ -367,7 +387,7 @@ int remove_index_slist(SList sList, int index, void** out)
         return 1;
     }
 
-    Node remove_node = aux->next;
+    SListNode remove_node = aux->next;
     aux->next = remove_node->next;
 
     if(sList->configs->remove_callback)
@@ -428,7 +448,7 @@ int index_of_slist(SList sList, void* value, int (*cmp)(const void*, const void*
         return -1;
 
     int index = 0;
-    Node aux = sList->first;
+    SListNode aux = sList->first;
 
     while(aux != NULL && (*cmp)(aux->value, value))
     {
@@ -471,7 +491,7 @@ void** to_array_slist(SList sList)
         return NULL;
 
     int i;
-    Node aux = sList->first;
+    SListNode aux = sList->first;
     for(i = 0; i < size_slist(sList); i++)
     {
         array[i] = aux->value;
@@ -488,9 +508,9 @@ int reverse_slist(SList sList)
     if(sList->size == 0 || sList->size == 1)
         return 0;
 
-    Node prev = NULL;
-    Node next = NULL;
-    Node swap = sList->first;
+    SListNode prev = NULL;
+    SListNode next = NULL;
+    SListNode swap = sList->first;
 
     while(swap != NULL)
     {
@@ -608,7 +628,7 @@ int slist_iterator_remove(SList_Iterator sList_iterator, void** out)
     if(sList_iterator->head == sList_iterator->list->first)
     {
         void* v = sList_iterator->head->value;
-        Node aux = sList_iterator->head;
+        SListNode aux = sList_iterator->head;
 
         sList_iterator->list->first = sList_iterator->next;
         sList_iterator->list->size--;
@@ -629,7 +649,7 @@ int slist_iterator_remove(SList_Iterator sList_iterator, void** out)
     if(sList_iterator->next == NULL)
     {
         void* v = sList_iterator->head->value;
-        Node aux = sList_iterator->head;
+        SListNode aux = sList_iterator->head;
 
         sList_iterator->prev->next = NULL;
         sList_iterator->head = sList_iterator->prev;
@@ -647,7 +667,7 @@ int slist_iterator_remove(SList_Iterator sList_iterator, void** out)
 
     // is a middle element
     void* v = sList_iterator->head->value;
-    Node aux = sList_iterator->head;
+    SListNode aux = sList_iterator->head;
 
     sList_iterator->prev->next = sList_iterator->next;
     sList_iterator->list->size--;

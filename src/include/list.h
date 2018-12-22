@@ -22,39 +22,12 @@
  * SOFTWARE.
  */
 
-#include "./include/utils.h"
+#ifndef CONTAINER_C_LIST_H
+#define CONTAINER_C_LIST_H
 
-void swap(void** a, void** b)
-{
-    void* tmp = *a;
-    *a = *b;
-    *b = tmp;
-}
+typedef struct list *List;
 
-int partition(void** arr, int low, int high, int (*cmp)(const void*, const void*))
-{
-    void* pivot = arr[high];
-    int i = low - 1;
+extern List create_list();
+extern int set_list_destruction_function_on_remove(List list, void (*remove_callback) (void*));
 
-    int j;
-    for(j = low; j <= high-1; j++)
-    {
-        if(cmp(arr[j], pivot) < 0)
-        {
-            i++;
-            swap(arr[i], arr[j]);
-        }
-    }
-    swap(arr[i+1], arr[high]);
-    return i+1;
-}
-
-void quicksort(void** arr, int low, int high, int (*cmp)(const void*, const void*))
-{
-    if(low < high)
-    {
-        int pi = partition(arr, low, high, cmp);
-        quicksort(arr, low, pi-1, cmp);
-        quicksort(arr, pi+1, high, cmp);
-    }
-}
+#endif //CONTAINER_C_LIST_H

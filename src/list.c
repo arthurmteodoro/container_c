@@ -22,39 +22,61 @@
  * SOFTWARE.
  */
 
-#include "./include/utils.h"
+#include <stdlib.h>
+#include "./include/list.h"
 
-void swap(void** a, void** b)
+struct list_node
 {
-    void* tmp = *a;
-    *a = *b;
-    *b = tmp;
+    void* value;
+    struct list_node* next;
+    struct list_node* prev;
+};
+typedef struct list_node *ListNode;
+
+struct list_config
+{
+    void (*remove_callback) (void*);
+};
+typedef struct list_config* List_Config;
+
+struct list
+{
+    size_t size;
+    ListNode first;
+    ListNode last;
+
+    List_Config config;
+};
+
+List create_list()
+{
+    List list = (List) malloc(sizeof(struct list));
+    if(list == NULL)
+        return NULL;
+
+    List_Config config = (List_Config) malloc(sizeof(struct list_config));
+    if(config == NULL)
+    {
+        free(list);
+        return NULL;
+    }
+
+    config->remove_callback = NULL;
+    list->config = config;
+    list->size = 0;
+    list->first = NULL;
+    list->last = NULL;
+
+    return list;
 }
 
-int partition(void** arr, int low, int high, int (*cmp)(const void*, const void*))
+int set_list_destruction_function_on_remove(List list, void (*remove_callback) (void*))
 {
-    void* pivot = arr[high];
-    int i = low - 1;
+    if(list == NULL)
+        return 0;
+    if(remove_callback == NULL)
+        return 0;
 
-    int j;
-    for(j = low; j <= high-1; j++)
-    {
-        if(cmp(arr[j], pivot) < 0)
-        {
-            i++;
-            swap(arr[i], arr[j]);
-        }
-    }
-    swap(arr[i+1], arr[high]);
-    return i+1;
-}
-
-void quicksort(void** arr, int low, int high, int (*cmp)(const void*, const void*))
-{
-    if(low < high)
-    {
-        int pi = partition(arr, low, high, cmp);
-        quicksort(arr, low, pi-1, cmp);
-        quicksort(arr, pi+1, high, cmp);
-    }
+    list->config->remove_callback = remove_callback;
+    return 1;
 }
