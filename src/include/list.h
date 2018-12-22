@@ -29,5 +29,19 @@ typedef struct list *List;
 
 extern List create_list();
 extern int set_list_destruction_function_on_remove(List list, void (*remove_callback) (void*));
+extern List destroy_list(List list);
+
+extern int append_list(List list, void* value);
+extern int prepend_list(List list, void* value);
+extern int insert_list(List list, int index, void* value);
+extern int extend_list(List list_dest, List list_source);
+
+extern int size_list(List list);
+extern int is_empty_list(List list);
+
+extern void* get_list(List list, int index);
+extern int set_list(List list, int index, void* value, void** out);
+
+extern int remove_index_list(List list, int index, void** out);
 
 #endif //CONTAINER_C_LIST_H
