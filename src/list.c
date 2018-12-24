@@ -387,6 +387,9 @@ int remove_index_list(List list, int index, void** out)
     if(index < 0 || index >= list->size)
         return 0;
 
+    if(list->size == 0)
+        return 0;
+
     if(list->size == 1)
     {
         if(list->config->remove_callback)
@@ -644,8 +647,6 @@ List_Iterator create_list_iterator(List list)
     if(!iterator)
         return NULL;
 
-    iterator->index = -1;
-    iterator->size = list->size;
     iterator->list = list;
     iterator->head = NULL;
     iterator->next = list->first;

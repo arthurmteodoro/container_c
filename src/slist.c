@@ -330,6 +330,9 @@ int remove_index_slist(SList sList, int index, void** out)
     if(index < 0 || index >= sList->size)
         return 0;
 
+    if(list->size == 0)
+        return 0;
+
     // if the list has only one element
     if(sList->size == 1)
     {
