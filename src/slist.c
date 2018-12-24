@@ -555,6 +555,7 @@ SList copy_shallow_slist(SList sList)
         void* value = slist_iterator_next(iterator);
         append_slist(new_list, value);
     }
+    destroy_slist_iterator(iterator);
 
     return new_list;
 }
@@ -570,8 +571,6 @@ SList_Iterator create_slist_iterator(SList sList)
     if(iterator == NULL)
         return NULL;
 
-    iterator->index = -1;
-    iterator->size = sList->size;
     iterator->list = sList;
     iterator->head = NULL;
     iterator->next = sList->first;
