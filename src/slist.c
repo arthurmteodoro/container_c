@@ -311,13 +311,11 @@ int set_slist(SList sList, int index, void* value, void** out)
         counter++;
     }
 
-    if(sList->configs->remove_callback)
-    {
+    if(out)
+        *out = aux->value;
+    else if(sList->configs->remove_callback)
         sList->configs->remove_callback(aux->value);
-    }
-    else
-        if(out)
-            *out = aux->value;
+
     aux->value = value;
     return 1;
 }
@@ -336,11 +334,10 @@ int remove_index_slist(SList sList, int index, void** out)
     // if the list has only one element
     if(sList->size == 1)
     {
-        if(sList->configs->remove_callback)
-            sList->configs->remove_callback(sList->first->value);
-        else
-            if(out)
-                *out = sList->first->value;
+        if(out)
+            *out = aux->value;
+        else if(sList->configs->remove_callback)
+            sList->configs->remove_callback(aux->value);
         free(sList->first);
 
         sList->first = NULL;
@@ -354,11 +351,10 @@ int remove_index_slist(SList sList, int index, void** out)
     {
         SListNode new_first = sList->first->next;
 
-        if(sList->configs->remove_callback)
-            sList->configs->remove_callback(sList->first->value);
-        else
-            if(out)
-                *out = sList->first->value;
+        if(out)
+            *out = aux->value;
+        else if(sList->configs->remove_callback)
+            sList->configs->remove_callback(aux->value);
 
         free(sList->first);
         sList->first = new_first;
@@ -379,11 +375,10 @@ int remove_index_slist(SList sList, int index, void** out)
     // if is a last value
     if(index+1 == sList->size)
     {
-        if(sList->configs->remove_callback)
-            sList->configs->remove_callback(aux->next->value);
-        else
-            if(out)
-                *out = aux->next->value;
+        if(out)
+            *out = aux->value;
+        else if(sList->configs->remove_callback)
+            sList->configs->remove_callback(aux->value);
         free(aux->next);
         aux->next = NULL;
         sList->size--;
@@ -393,11 +388,10 @@ int remove_index_slist(SList sList, int index, void** out)
     SListNode remove_node = aux->next;
     aux->next = remove_node->next;
 
-    if(sList->configs->remove_callback)
-        sList->configs->remove_callback(remove_node->value);
-    else
-        if(out)
-            *out = remove_node->value;
+    if(out)
+        *out = aux->value;
+    else if(sList->configs->remove_callback)
+        sList->configs->remove_callback(aux->value);
 
     free(remove_node);
     sList->size--;

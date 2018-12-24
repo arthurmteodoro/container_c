@@ -392,10 +392,10 @@ int remove_index_list(List list, int index, void** out)
 
     if(list->size == 1)
     {
-        if(list->config->remove_callback)
-            list->config->remove_callback(list->first->value);
-        else if(out)
+        if(out)
             *out = list->first->value;
+        else if(list->config->remove_callback)
+            list->config->remove_callback(list->first->value);
         free(list->first);
 
         list->first = NULL;
@@ -409,10 +409,10 @@ int remove_index_list(List list, int index, void** out)
     {
         ListNode new_first = list->first->next;
 
-        if(list->config->remove_callback)
-            list->config->remove_callback(list->first->value);
-        else if(out)
+        if(out)
             *out = list->first->value;
+        else if(list->config->remove_callback)
+            list->config->remove_callback(list->first->value);
 
         free(list->first);
         new_first->prev = NULL;
@@ -426,10 +426,10 @@ int remove_index_list(List list, int index, void** out)
     {
         ListNode new_last = list->last->prev;
 
-        if(list->config->remove_callback)
-            list->config->remove_callback(list->last->value);
-        else if(out)
-            *out = list->last->value;
+        if(out)
+            *out = list->first->value;
+        else if(list->config->remove_callback)
+            list->config->remove_callback(list->first->value);
 
         free(list->last);
         new_last->next = NULL;
@@ -465,10 +465,10 @@ int remove_index_list(List list, int index, void** out)
     ListNode node_prev = aux->prev;
     ListNode node_next = aux->next;
 
-    if(list->config->remove_callback)
-        list->config->remove_callback(aux->value);
-    else if(out)
-        *out = aux->value;
+    if(out)
+        *out = list->first->value;
+    else if(list->config->remove_callback)
+        list->config->remove_callback(list->first->value);
 
     free(aux);
     node_prev->next = node_next;
